@@ -1,13 +1,22 @@
 # fetchr
 
-Fetchr provides a cached USD cryptocurrency market snapshot from CoinGecko as JSON and CSV.
+Fetchr publishes a static USD cryptocurrency market snapshot from CoinGecko as a web page, JSON, and CSV. The default target is 3,000 assets, refreshed by GitHub Actions approximately hourly. No application server or server-side queries are required for the static site.
 
-Run with Python 3.10+: `COINGECKO_API_KEY=your-demo-key python3 app.py` (keep the key private). The server listens on port 8000 and refreshes on startup and hourly. It retains its last complete snapshot in `data/snapshot.json`; requests return 503 until a snapshot is available.
+## GitHub Pages setup
 
-Administrator settings: `FETCHR_ASSET_COUNT` (default 3000), `FETCHR_REFRESH_SECONDS` (default 3600), `FETCHR_PORT` (default 8000), and `FETCHR_DATA_DIR` (default `data`). Verify your CoinGecko plan's quota and redistribution terms. At 250 assets per request, a refresh takes at least `ceil(count / 250)` upstream requests; leave room for retries and overlapping pages. A live 3,000-asset refresh succeeded, but monthly quota has not been verified.
+1. Merge the workflow into the repository's default branch (`main`). GitHub scheduled workflows run from the default branch.
+2. In repository Settings → Secrets and variables → Actions, add the CoinGecko Demo API key as the `COINGECKO_API_KEY` repository secret. Do not put the key in the repository or chat. The cloud environment's key does not automatically transfer to GitHub.
+3. In Settings → Pages, set the build and deployment source to **GitHub Actions**.
+4. Run **Refresh and deploy market data** from Actions, or wait for the next scheduled run. The workflow publishes the complete `site` folder to GitHub Pages. If generation fails, it does not deploy, so the previous successful Pages deployment remains available.
 
-`GET /v1/assets?limit=100&offset=0` returns a page, `GET /v1/assets/{coingecko_id}` returns one asset, and `GET /v1/assets.csv` downloads the snapshot. Google Sheets can import a publicly hosted CSV with `=IMPORTDATA("https://your-host/v1/assets.csv")`; Excel can use Data → From Web. Spreadsheet refresh timing is independent of the server schedule.
+Set repository Actions variable `FETCHR_ASSET_COUNT` to change the default asset count. To change the refresh schedule, edit the cron expression in `.github/workflows/pages.yml`. Scheduled GitHub Actions can be delayed. Confirm GitHub Actions and CoinGecko limits and redistribution terms for your account before relying on this schedule. Each refresh needs at least `ceil(count / 250)` requests, plus any overlap pages or retries. The free-tier monthly quota has not been verified.
 
-The fields include CoinGecko ID, rank, name, symbol, USD price, market cap, FDV, rolling 24-hour percentage price change, and source update time. Missing values are null in JSON and blank in CSV. The JSON listing includes the time fetchr completed the snapshot. Rankings may change while pages are being fetched, so the snapshot is an approximation rather than an atomic ranking; repeated IDs are deduplicated. Data is supplied by CoinGecko. Category filters and historical data are not implemented.
+## Local generation
 
-Run tests with `python3 -m unittest discover -s tests -v`.
+With Python 3.10 or newer, configure `COINGECKO_API_KEY` securely in your environment and run `python3 generate.py`. It writes `site/assets.json` and `site/assets.csv` and retains the source snapshot under the ignored `data/` directory. `FETCHR_ASSET_COUNT`, `FETCHR_DATA_DIR`, and `FETCHR_OUTPUT_DIR` can be set as environment variables. Serve `site/` with a static web server to inspect the page; the generated CSV and JSON are ignored by Git.
+
+In Google Sheets use `=IMPORTDATA("https://your-pages-url/assets.csv")`. In Excel choose Data → From Web and use that URL. Spreadsheet refresh timing is independent of fetchr. The JSON includes source, currency, snapshot completion time and an assets array.
+
+Fields include CoinGecko ID, market-cap rank, name, ticker, USD price, market cap, fully diluted valuation, rolling 24-hour percentage price change, and source update time. Missing values are null in JSON and blank in CSV. Rankings may move while upstream pages are fetched, so the snapshot approximates the top assets; repeated IDs are deduplicated. Data is provided by CoinGecko. Category exclusions and historical data are not implemented.
+
+Run tests with `python3 -m unittest discover -s tests -v`. The earlier `app.py` HTTP server remains available for local compatibility but is not deployed by the static workflow.

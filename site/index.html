@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>fetchr — crypto market data</title>
+  <style>
+    body { font: 16px/1.6 system-ui, sans-serif; max-width: 52rem; margin: 3rem auto; padding: 0 1.25rem; color: #1c2636; }
+    a { color: #2349a2; } h1 { font-size: 2.5rem; margin-bottom: 0; }
+    .links { display: flex; gap: 1rem; flex-wrap: wrap; } .button { background: #2349a2; color: white; padding: .6rem 1rem; border-radius: .4rem; text-decoration: none; }
+    code { overflow-wrap: anywhere; background: #f0f2f7; padding: .15rem .3rem; }
+    table { border-collapse: collapse; width: 100%; } th, td { text-align: left; padding: .45rem; border-bottom: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <h1>fetchr</h1>
+  <p>Cryptocurrency market data in USD, sourced from CoinGecko.</p>
+  <p id="status">Checking snapshot freshness…</p>
+  <p class="links"><a class="button" href="assets.csv" download>Download CSV</a><a href="assets.json">View JSON</a></p>
+  <h2>What’s included</h2>
+  <p>The snapshot targets the leading assets by market capitalization. Its actual asset count and refresh time appear above. It is refreshed on a schedule when the workflow runs successfully; scheduled runs may be delayed. Rankings can change between source requests, so the ranking is approximate.</p>
+  <table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody>
+    <tr><td>id</td><td>CoinGecko asset ID</td></tr><tr><td>market_cap_rank</td><td>Market-cap rank</td></tr>
+    <tr><td>name, symbol</td><td>Asset name and ticker</td></tr><tr><td>current_price</td><td>USD price</td></tr>
+    <tr><td>market_cap</td><td>USD market capitalization</td></tr><tr><td>fully_diluted_valuation</td><td>USD fully diluted valuation</td></tr>
+    <tr><td>price_change_percentage_24h</td><td>Rolling 24-hour price change (%)</td></tr><tr><td>last_updated</td><td>Source update time</td></tr>
+  </tbody></table>
+  <p>Missing data is blank in CSV and null in JSON. JSON includes the snapshot completion time. Values come from CoinGecko and are not investment advice.</p>
+  <h2>Use in a spreadsheet</h2>
+  <p>In Google Sheets, enter <code id="sheet-formula">=IMPORTDATA("URL_TO_ASSETS_CSV")</code>. In Excel, choose <strong>Data → From Web</strong> and enter the CSV URL. Spreadsheet refresh timing is independent of fetchr.</p>
+  <p>Data supplied by <a href="https://www.coingecko.com/">CoinGecko</a>.</p>
+  <script>
+    document.getElementById('sheet-formula').textContent = '=IMPORTDATA("' + new URL('assets.csv', location.href).href + '")';
+    fetch('assets.json').then(r => { if (!r.ok) throw new Error(); return r.json(); }).then(data => {
+      document.getElementById('status').textContent = data.assets.length.toLocaleString() + ' assets · Snapshot: ' + new Date(data.snapshot_at).toUTCString();
+    }).catch(() => { document.getElementById('status').textContent = 'Snapshot unavailable. Please try again later.'; });
+  </script>
+</body>
+</html>

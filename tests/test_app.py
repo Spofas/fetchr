@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, urlsplit
 from urllib.request import urlopen
 
 from app import Store, handler_for
+from generate import generate
 
 
 class Provider(BaseHTTPRequestHandler):
@@ -90,6 +91,22 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(Provider.pages, [1, 2, 3])
         self.assertEqual(len({asset['id'] for asset in assets}), 500)
         self.assertEqual(assets[-1]['id'], 'coin-501')
+
+    def test_static_files_and_failed_refresh(self):
+        output = self.temp.name + '/site'
+        generate(output, self.store)
+        with open(output + '/assets.json', encoding='utf-8') as f:
+            snapshot = json.load(f)
+        with open(output + '/assets.csv', encoding='utf-8', newline='') as f:
+            rows = list(csv.DictReader(f))
+        self.assertEqual(len(snapshot['assets']), 500)
+        self.assertEqual(len(rows), 500)
+        self.assertEqual(rows[0]['id'], snapshot['assets'][0]['id'])
+        Provider.fail_page = 2
+        with self.assertRaises(HTTPError):
+            generate(output, self.store)
+        with open(output + '/assets.json', encoding='utf-8') as f:
+            self.assertEqual(json.load(f), snapshot)
 
 
 if __name__ == '__main__':
