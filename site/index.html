@@ -22,7 +22,7 @@
   <p id="status">Checking snapshot freshness…</p>
   <p class="links"><a class="button" href="assets.csv" download>Download CSV</a><a href="assets.json">View JSON</a></p>
   <h2>Latest market data</h2>
-  <p>The top 25 assets by market cap, excluding stablecoins and liquid-staking tokens, from the latest snapshot. Prices and valuations are in USD. Exclusions use CoinGecko categories, which may be incomplete.</p>
+  <p>The top 15 assets by market cap, excluding stablecoins and liquid-staking tokens, from the latest snapshot. Prices and valuations are in USD. Exclusions use CoinGecko categories, which may be incomplete.</p>
     <table class="market-table"><thead><tr><th scope="col">Rank</th><th scope="col">Asset</th><th scope="col">Price</th><th scope="col">FDV</th><th scope="col">24h change</th></tr></thead>
       <tbody id="market-data"><tr><td colspan="5">Loading market data…</td></tr></tbody>
     </table>
@@ -47,7 +47,7 @@
     }
     function render(assets, excluded) {
       table.replaceChildren();
-      const selected = assets.filter(asset => !excluded.has(asset.id)).slice(0, 25);
+      const selected = assets.filter(asset => !excluded.has(asset.id)).slice(0, 15);
       if (!selected.length) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
