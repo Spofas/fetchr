@@ -32,6 +32,6 @@ if __name__ == '__main__':
     key = os.getenv('COINGECKO_API_KEY')
     if not key:
         raise SystemExit('COINGECKO_API_KEY must be configured')
-    store = Store(positive_int('FETCHR_ASSET_COUNT', 3000), os.getenv('FETCHR_DATA_DIR', 'data'), key)
+    store = Store(positive_int('FETCHR_ASSET_COUNT', 2500), os.getenv('FETCHR_DATA_DIR', 'data'), key)
     generate(os.getenv('FETCHR_OUTPUT_DIR', 'site'), store)
     print(f"Generated {len(store.get()['assets'])} assets")

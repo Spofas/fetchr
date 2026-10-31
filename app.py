@@ -153,7 +153,7 @@ Data provided by CoinGecko. Consult your plan's terms before redistribution.</p>
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    count = positive_int("FETCHR_ASSET_COUNT", 3000)
+    count = positive_int("FETCHR_ASSET_COUNT", 2500)
     interval = positive_int("FETCHR_REFRESH_SECONDS", 3600)
     port = positive_int("FETCHR_PORT", 8000)
     store = Store(count, os.getenv("FETCHR_DATA_DIR", "data"), os.getenv("COINGECKO_API_KEY", ""))

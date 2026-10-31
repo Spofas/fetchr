@@ -1,22 +1,74 @@
 # fetchr
 
-Fetchr publishes a static USD cryptocurrency market snapshot from CoinGecko as a web page, JSON, and CSV. The default target is 3,000 assets, refreshed by GitHub Actions approximately hourly. No application server or server-side queries are required for the static site.
+Fetchr publishes a USD cryptocurrency market snapshot sourced from CoinGecko. The default target is **2,500 assets**, updated by GitHub Actions at the start of each hour in UTC. GitHub may delay scheduled jobs, especially at the start of an hour. The last successful deployment stays available if a refresh fails. The site is static: it has no continuously running server or server-side query API.
 
-## GitHub Pages setup
+- [Open fetchr](https://spofas.github.io/fetchr/)
+- [Download the full CSV](https://spofas.github.io/fetchr/assets.csv)
+- [View or download the full JSON](https://spofas.github.io/fetchr/assets.json)
+- [View refresh runs](https://github.com/Spofas/fetchr/actions/workflows/pages.yml)
 
-1. Merge the workflow into the repository's default branch (`main`). GitHub scheduled workflows run from the default branch.
-2. In repository Settings → Secrets and variables → Actions, add the CoinGecko Demo API key as the `COINGECKO_API_KEY` repository secret. Do not put the key in the repository or chat. The cloud environment's key does not automatically transfer to GitHub.
-3. In Settings → Pages, set the build and deployment source to **GitHub Actions**.
-4. Run **Refresh and deploy market data** from Actions, or wait for the next scheduled run. The workflow publishes the complete `site` folder to GitHub Pages. If generation fails, it does not deploy, so the previous successful Pages deployment remains available.
+## Using the data
 
-Set repository Actions variable `FETCHR_ASSET_COUNT` to change the default asset count. To change the refresh schedule, edit the cron expression in `.github/workflows/pages.yml`. Scheduled GitHub Actions can be delayed. Confirm GitHub Actions and CoinGecko limits and redistribution terms for your account before relying on this schedule. Each refresh needs at least `ceil(count / 250)` requests, plus any overlap pages or retries. The free-tier monthly quota has not been verified. The homepage excludes stablecoins and liquid-staking tokens using CoinGecko categories, which may be incomplete. Category data is fetched once per UTC day using a GitHub Actions cache and adds additional API calls. The CSV and JSON include the full snapshot.
+The homepage previews the first 15 assets by market cap after excluding IDs in CoinGecko's stablecoin and liquid-staking-token categories. The preview includes icons where available. These classifications may be incomplete; they apply to the preview only. The full CSV and JSON include all assets in the snapshot.
 
-## Local generation
+The field selector on the page produces custom CSV and JSON downloads and a Google Sheets formula for the selected columns. Custom downloads are snapshots created in the browser; they do not update automatically. The formula imports the full CSV and selects the chosen columns when Google Sheets refreshes it. Copy buttons are available for the formulas and full-file URLs.
 
-With Python 3.10 or newer, configure `COINGECKO_API_KEY` securely in your environment and run `python3 categories.py` followed by `python3 generate.py`. It writes `site/assets.json`, `site/assets.csv`, and `site/categories.json`; source data is retained under the ignored `data/` directory. `FETCHR_ASSET_COUNT`, `FETCHR_DATA_DIR`, and `FETCHR_OUTPUT_DIR` can be set as environment variables. The category file must be in the configured data directory. Remove or refresh `data/categories.json` to update the categories locally. Serve `site/` with a static web server to inspect the page; generated files are ignored by Git.
+To import the complete dataset into Google Sheets, enter:
 
-In Google Sheets use `=IMPORTDATA("https://your-pages-url/assets.csv")`. In Excel choose Data → From Web and use that URL. Spreadsheet refresh timing is independent of fetchr. The JSON includes source, currency, snapshot completion time and an assets array.
+```text
+=IMPORTDATA("https://spofas.github.io/fetchr/assets.csv")
+```
 
-Fields include CoinGecko ID, market-cap rank, name, ticker, USD price, market cap, fully diluted valuation, rolling 24-hour percentage price change, source update time, image URL, 24-hour trading volume, all-time-high price and date, and percentage change from all-time high. The new fields are appended to preserve existing CSV column positions. Missing values are null in JSON and blank in CSV. Rankings may move while upstream pages are fetched, so the snapshot approximates the top assets; repeated IDs are deduplicated. Data is provided by CoinGecko. Category exclusions and historical data are not implemented for the downloads.
+For Excel, download the CSV or use **Data → From Web** with the CSV URL. Spreadsheet applications control their own refresh timing independently of fetchr.
 
-Run tests with `python3 -m unittest discover -s tests -v`. The earlier `app.py` HTTP server remains available for local compatibility but is not deployed by the static workflow.
+## Snapshot fields
+
+CSV columns are in the following order. Preserve existing column positions when extending the schema: the page's generated Sheets formulas depend on them. USD amounts come from CoinGecko. Missing values are empty in CSV and `null` in JSON.
+
+| Column | Field | Meaning |
+| ---: | --- | --- |
+| 1 | `id` | CoinGecko asset ID |
+| 2 | `market_cap_rank` | Market-cap rank |
+| 3 | `name` | Asset name |
+| 4 | `symbol` | Ticker |
+| 5 | `current_price` | USD price |
+| 6 | `market_cap` | USD market capitalization |
+| 7 | `fully_diluted_valuation` | USD fully diluted valuation |
+| 8 | `price_change_percentage_24h` | Rolling 24-hour price change (%) |
+| 9 | `last_updated` | Provider's asset update time |
+| 10 | `image` | CoinGecko icon URL |
+| 11 | `total_volume` | 24-hour trading volume in USD |
+| 12 | `ath` | All-time-high price in USD |
+| 13 | `ath_date` | Date and time of the all-time high |
+| 14 | `ath_change_percentage` | Percentage change from all-time high, usually negative below the high |
+
+The full JSON contains `source`, `currency`, `snapshot_at` (when fetchr completed its fetch), and `assets`. Custom JSON also records the selected `fields`. CoinGecko updates individual assets at different times. Rankings can move between upstream pages, so the fetched order is an approximation; repeated IDs are deduplicated. No historical time series is maintained.
+
+## Configuration and deployment
+
+The workflow in [`.github/workflows/pages.yml`](.github/workflows/pages.yml) runs on pushes to `main`, manual dispatch, and `0 * * * *` (the start of each hour UTC). Scheduled GitHub Actions are not guaranteed to start exactly on time. The repository variable `FETCHR_ASSET_COUNT` overrides the default of `2500`; configure it under **Settings → Secrets and variables → Actions → Variables**. Changing the variable takes effect on the next run. Edit the cron expression on the default branch to change the schedule.
+
+To set up a deployment:
+
+1. Put the workflow on the default branch (`main`); scheduled workflows run there.
+2. Add a CoinGecko Demo key as the repository Actions secret `COINGECKO_API_KEY`. Never commit the key or share it in chat. Cloud environment secrets do not automatically transfer to GitHub.
+3. Under **Settings → Pages**, select **GitHub Actions** as the source.
+4. Run **Refresh and deploy market data** from the Actions tab, or wait for a scheduled run. The workflow generates a complete snapshot before deploying. A failed run leaves the last successful Pages deployment in place.
+
+At 250 assets per request, a 2,500-asset refresh needs at least 10 market requests. Additional calls may be needed for overlapping pages, retries, manual runs, and category data. Category IDs are cached by UTC day in GitHub Actions; cache misses can cause extra category requests. GitHub Actions and CoinGecko limits and redistribution terms should be checked for the account in use. The CoinGecko free-tier monthly quota has not been verified.
+
+## Local development
+
+Python 3.10 or newer is required; there are no third-party Python dependencies. Set `COINGECKO_API_KEY` securely in the environment, then run:
+
+```sh
+python3 categories.py
+python3 generate.py
+python3 -m http.server 8000 --directory site
+```
+
+The first command writes `data/categories.json` if absent; remove that file when a fresh category fetch is needed. The generator writes `site/assets.json`, `site/assets.csv`, and `site/categories.json`; generated files and source data are ignored by Git. `FETCHR_ASSET_COUNT` and `FETCHR_OUTPUT_DIR` override the count and output directory. `FETCHR_DATA_DIR` overrides the generator's data directory, but `categories.py` always writes to `data/`: if using a different directory, place `categories.json` there before generating. Never commit generated files containing secrets.
+
+Run the tests with `python3 -m unittest discover -s tests -v`. The earlier `app.py` HTTP server remains for local compatibility; GitHub Pages does not run it.
+
+Data supplied by [CoinGecko](https://www.coingecko.com/); it is not investment advice.
