@@ -48,6 +48,8 @@ The full JSON contains `source`, `currency`, `snapshot_at` (when fetchr complete
 
 ## Configuration and deployment
 
+A Cloudflare-based replacement for the native GitHub schedule is prepared under [`scheduler/`](scheduler/README.md). It needs a Cloudflare deployment and a repository-scoped GitHub token stored as a Worker secret. After verifying a successful external refresh, set the repository Actions variable `FETCHR_EXTERNAL_SCHEDULER` to `true` to skip native scheduled jobs. Manual and push-triggered refreshes remain enabled. Until this migration is completed, the native GitHub schedule stays enabled.
+
 The workflow in [`.github/workflows/pages.yml`](.github/workflows/pages.yml) runs on pushes to `main`, manual dispatch, and `9 * * * *` (minute 09 of each hour UTC). Scheduled GitHub Actions are not guaranteed to start exactly on time. The repository variable `FETCHR_ASSET_COUNT` overrides the default of `2500`; configure it under **Settings → Secrets and variables → Actions → Variables**. Changing the variable takes effect on the next run. Edit the cron expression on the default branch to change the schedule.
 
 To set up a deployment:

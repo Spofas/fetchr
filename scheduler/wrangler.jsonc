@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fetchr-scheduler",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-31",
+  "workers_dev": false,
+  "triggers": { "crons": ["9 * * * *"] },
+  "observability": { "enabled": true }
+}
