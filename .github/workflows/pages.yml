@@ -23,6 +23,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Select daily category cache
+        id: date
+        run: echo "day=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: data/categories.json
+          key: coingecko-categories-v1-${{ steps.date.outputs.day }}
+      - name: Fetch categories if not cached
+        env:
+          COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+        run: python categories.py
       - name: Generate complete snapshot
         env:
           COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}

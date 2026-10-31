@@ -1,6 +1,7 @@
 import csv
 import io
 import json
+from pathlib import Path
 import tempfile
 import threading
 import unittest
@@ -94,6 +95,7 @@ class IntegrationTest(unittest.TestCase):
 
     def test_static_files_and_failed_refresh(self):
         output = self.temp.name + '/site'
+        Path(self.temp.name, 'categories.json').write_text(json.dumps({'excluded_ids': ['coin-1']}), encoding='utf-8')
         generate(output, self.store)
         with open(output + '/assets.json', encoding='utf-8') as f:
             snapshot = json.load(f)
@@ -102,6 +104,8 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(len(snapshot['assets']), 500)
         self.assertEqual(len(rows), 500)
         self.assertEqual(rows[0]['id'], snapshot['assets'][0]['id'])
+        with open(output + '/categories.json', encoding='utf-8') as f:
+            self.assertEqual(json.load(f)['excluded_ids'], ['coin-1'])
         Provider.fail_page = 2
         with self.assertRaises(HTTPError):
             generate(output, self.store)

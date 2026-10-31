@@ -2,6 +2,7 @@
 import csv
 import json
 import os
+import shutil
 from pathlib import Path
 
 from app import FIELDS, Store, positive_int
@@ -9,6 +10,9 @@ from app import FIELDS, Store, positive_int
 
 def generate(output, store):
     # Do not write public files until the complete fetch has succeeded.
+    categories = store.directory / 'categories.json'
+    if not categories.exists():
+        raise FileNotFoundError('Category data is required; run categories.py first')
     store.refresh()
     snapshot = store.get()
     output = Path(output)
@@ -21,6 +25,7 @@ def generate(output, store):
         for asset in snapshot['assets']:
             writer.writerow({key: ("'" + value if isinstance(value, str) and value.lstrip().startswith(('=', '+', '-', '@')) else value)
                              for key, value in asset.items()})
+    shutil.copyfile(categories, output / 'categories.json')
 
 
 if __name__ == '__main__':

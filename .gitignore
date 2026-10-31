@@ -3,3 +3,4 @@ __pycache__/
 data/
 site/assets.json
 site/assets.csv
+site/categories.json

@@ -16,7 +16,7 @@ from urllib.parse import parse_qs, unquote, urlencode, urlsplit
 from urllib.request import Request, urlopen
 
 FIELDS = ("id", "market_cap_rank", "name", "symbol", "current_price", "market_cap",
-          "fully_diluted_valuation", "price_change_percentage_24h", "last_updated")
+          "fully_diluted_valuation", "price_change_percentage_24h", "last_updated", "image")
 MARKETS_URL = "https://api.coingecko.com/api/v3/coins/markets"
 log = logging.getLogger("fetchr")
 
