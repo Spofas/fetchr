@@ -28,6 +28,7 @@ class Provider(BaseHTTPRequestHandler):
         items = [{"id": f"coin-{i}", "name": f"Coin {i}", "symbol": f"c{i}",
                   "market_cap_rank": i, "current_price": i, "market_cap": i * 10,
                   "fully_diluted_valuation": None, "price_change_percentage_24h": 1.5,
+                  "total_volume": 100, "ath": 50, "ath_date": "2025-01-01T00:00:00Z", "ath_change_percentage": -25,
                   "last_updated": "2026-01-01T00:00:00Z"}
                  for i in range((page - 1) * 250 + 1, page * 250 + 1)]
         if self.overlap and page == 2:
@@ -104,6 +105,8 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(len(snapshot['assets']), 500)
         self.assertEqual(len(rows), 500)
         self.assertEqual(rows[0]['id'], snapshot['assets'][0]['id'])
+        self.assertEqual(rows[0]['total_volume'], '100')
+        self.assertEqual(snapshot['assets'][0]['ath_change_percentage'], -25)
         with open(output + '/categories.json', encoding='utf-8') as f:
             self.assertEqual(json.load(f)['excluded_ids'], ['coin-1'])
         Provider.fail_page = 2

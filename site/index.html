@@ -33,6 +33,13 @@
     .muted { color: var(--muted); max-width: 53rem; } .footnote { font-size: .85rem; }
     code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; color: #202522; }
     .code-block { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent); padding: 1rem 1.2rem; font-size: .85rem; }
+    .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: .45rem; padding: 0; border: 0; margin: 1rem 0; }
+    .field-grid label { display: flex; align-items: flex-start; gap: .55rem; padding: .5rem; background: var(--panel); font-size: .85rem; cursor: pointer; }
+    .field-grid input { accent-color: var(--accent); margin-top: .35rem; }
+    .field-grid code { display: block; font-size: .72rem; color: var(--muted); }
+    button.button { cursor: pointer; font-family: inherit; } button:disabled { opacity: .5; cursor: not-allowed; }
+    .copy-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+    .copy-row code { flex: 1 1 20rem; } .message { font-size: .85rem; color: var(--muted); min-height: 1.4em; }
     table { border-collapse: collapse; width: 100%; } th, td { text-align: left; padding: .45rem .65rem; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
     th { color: var(--muted); font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; text-transform: uppercase; letter-spacing: .05em; }
     .market-table { font-size: .85rem; font-variant-numeric: tabular-nums; margin-top: .75rem; }
@@ -68,19 +75,106 @@
     <tr><td>name, symbol</td><td>Asset name and ticker</td></tr><tr><td>current_price</td><td>USD price</td></tr>
     <tr><td>market_cap</td><td>USD market capitalization</td></tr><tr><td>fully_diluted_valuation</td><td>USD fully diluted valuation</td></tr>
     <tr><td>price_change_percentage_24h</td><td>Rolling 24-hour price change (%)</td></tr><tr><td>last_updated</td><td>Source update time</td></tr>
+    <tr><td>image</td><td>CoinGecko image URL</td></tr><tr><td>total_volume</td><td>24-hour trading volume (USD)</td></tr>
+    <tr><td>ath</td><td>All-time high price (USD)</td></tr><tr><td>ath_date</td><td>When the all-time high occurred</td></tr>
+    <tr><td>ath_change_percentage</td><td>Percentage change from the all-time high (usually negative)</td></tr>
   </tbody></table>
   <p class="muted footnote">Missing values are blank in CSV and null in JSON. JSON includes the snapshot completion time. Data is not investment advice.</p>
   </section>
   <section class="spreadsheet" aria-labelledby="sheet-heading"><p class="eyebrow">03 <span class="slash">/</span> CONNECT YOUR TOOLS</p>
   <h2 id="sheet-heading">Bring it to your spreadsheet.</h2>
   <p class="muted">In Google Sheets, paste this formula into a cell:</p>
-  <p class="code-block"><code id="sheet-formula">=IMPORTDATA("URL_TO_ASSETS_CSV")</code></p>
+  <div class="code-block copy-row"><code id="sheet-formula">=IMPORTDATA("URL_TO_ASSETS_CSV")</code><button class="button secondary" type="button" data-copy="sheet-formula">Copy formula</button></div>
   <p class="muted">In Excel, choose <strong>Data → From Web</strong> and enter the CSV URL. Spreadsheet refresh timing is independent of fetchr.</p>
+  <div class="code-block copy-row"><code id="csv-url">CSV URL</code><button class="button secondary" type="button" data-copy="csv-url">Copy CSV URL</button></div>
+  <div class="code-block copy-row"><code id="json-url">JSON URL</code><button class="button secondary" type="button" data-copy="json-url">Copy JSON URL</button></div>
+  <p id="copy-status" class="message" role="status"></p>
+  </section>
+  <section class="spreadsheet" aria-labelledby="custom-heading"><p class="eyebrow">04 <span class="slash">/</span> CUSTOM EXPORT</p>
+  <h2 id="custom-heading">Choose your fields.</h2>
+  <p class="muted">Select the columns you need. Custom downloads are one-time files; the Sheets formula imports fresh data when Google Sheets refreshes it.</p>
+  <div class="links"><button class="button secondary" type="button" id="select-all">Select all</button><button class="button secondary" type="button" id="select-none">Clear all</button></div>
+  <fieldset class="field-grid" id="field-selector"><legend class="muted">Fields to include</legend></fieldset>
+  <div class="code-block copy-row"><code id="custom-formula">Loading…</code><button class="button secondary" type="button" id="copy-custom" data-copy="custom-formula">Copy formula</button></div>
+  <div class="links"><button class="button primary" type="button" id="export-csv">Download custom CSV</button><button class="button secondary" type="button" id="export-json">Download custom JSON</button></div>
+  <p id="export-status" class="message" role="status"></p>
   </section>
   </main>
   <footer><a class="brand footer-brand" href="./">fetchr<span class="brand-dot">.</span></a><p>Data supplied by <a href="https://www.coingecko.com/">CoinGecko</a></p></footer>
   <script>
-    document.getElementById('sheet-formula').textContent = '=IMPORTDATA("' + new URL('assets.csv', location.href).href + '")';
+    const csvUrl = new URL('assets.csv', location.href).href;
+    const jsonUrl = new URL('assets.json', location.href).href;
+    document.getElementById('sheet-formula').textContent = '=IMPORTDATA("' + csvUrl + '")';
+    document.getElementById('csv-url').textContent = csvUrl;
+    document.getElementById('json-url').textContent = jsonUrl;
+    // Keep this order in sync with app.py FIELDS: Sheets QUERY uses CSV positions.
+    const fields = [
+      ['id', 'CoinGecko ID'], ['market_cap_rank', 'Market-cap rank'], ['name', 'Name'], ['symbol', 'Ticker'],
+      ['current_price', 'Price (USD)'], ['market_cap', 'Market cap (USD)'],
+      ['fully_diluted_valuation', 'FDV (USD)'], ['price_change_percentage_24h', '24-hour change (%)'],
+      ['last_updated', 'Source update time'], ['image', 'Image URL'], ['total_volume', '24-hour volume (USD)'],
+      ['ath', 'All-time high (USD)'], ['ath_date', 'All-time-high date'], ['ath_change_percentage', 'Change from all-time high (%)']
+    ];
+    const selector = document.getElementById('field-selector');
+    const customFormula = document.getElementById('custom-formula');
+    const exportStatus = document.getElementById('export-status');
+    let snapshot = null;
+    for (const [field, description] of fields) {
+      const label = document.createElement('label');
+      const input = document.createElement('input');
+      input.type = 'checkbox'; input.value = field; input.checked = true;
+      const text = document.createElement('span');
+      text.textContent = description;
+      const code = document.createElement('code'); code.textContent = field; text.appendChild(code);
+      label.appendChild(input); label.appendChild(text); selector.appendChild(label);
+    }
+    function selectedFields() {
+      return Array.from(selector.querySelectorAll('input:checked'), input => input.value);
+    }
+    function updateSelection() {
+      const selected = selectedFields();
+      const columns = selected.map(field => 'Col' + (fields.findIndex(entry => entry[0] === field) + 1));
+      customFormula.textContent = selected.length ? '=QUERY(IMPORTDATA("' + csvUrl + '"), "SELECT ' + columns.join(', ') + '", 1)' : 'Select at least one field.';
+      document.getElementById('copy-custom').disabled = !selected.length;
+      for (const id of ['export-csv', 'export-json']) document.getElementById(id).disabled = !selected.length || !snapshot;
+      exportStatus.textContent = selected.length ? '' : 'Select at least one field to export.';
+    }
+    selector.addEventListener('change', updateSelection);
+    for (const [id, checked] of [['select-all', true], ['select-none', false]]) {
+      document.getElementById(id).addEventListener('click', () => {
+        selector.querySelectorAll('input').forEach(input => { input.checked = checked; });
+        updateSelection();
+      });
+    }
+    document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', async () => {
+      const status = document.getElementById('copy-status');
+      try {
+        await navigator.clipboard.writeText(document.getElementById(button.dataset.copy).textContent);
+        status.textContent = 'Copied to clipboard.';
+      } catch (_) { status.textContent = 'Copy failed. Select and copy the text manually.'; }
+    }));
+    function csvCell(value) {
+      if (value === null || value === undefined) return '';
+      let text = String(value);
+      if (typeof value === 'string' && /^[\s]*[=+@-]/.test(text)) text = "'" + text;
+      return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+    }
+    function exportFile(format) {
+      const selected = selectedFields();
+      if (!selected.length || !snapshot) return;
+      const assets = snapshot.assets.map(asset => Object.fromEntries(selected.map(field => [field, asset[field] ?? null])));
+      const contents = format === 'csv'
+        ? selected.join(',') + '\n' + assets.map(asset => selected.map(field => csvCell(asset[field])).join(',')).join('\n') + '\n'
+        : JSON.stringify({source: snapshot.source, currency: snapshot.currency, snapshot_at: snapshot.snapshot_at, fields: selected, assets}, null, 2);
+      const url = URL.createObjectURL(new Blob([contents], {type: format === 'csv' ? 'text/csv;charset=utf-8' : 'application/json'}));
+      const link = document.createElement('a'); link.href = url; link.download = 'fetchr-custom.' + format;
+      document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      exportStatus.textContent = 'Downloaded ' + assets.length.toLocaleString() + ' assets with ' + selected.length + ' fields.';
+    }
+    document.getElementById('export-csv').addEventListener('click', () => exportFile('csv'));
+    document.getElementById('export-json').addEventListener('click', () => exportFile('json'));
+    updateSelection();
     const table = document.getElementById('market-data');
     function money(value) {
       if (typeof value !== 'number' || !Number.isFinite(value)) return '—';
@@ -134,6 +228,8 @@
     }
     Promise.all(['assets.json', 'categories.json'].map(url => fetch(url).then(r => { if (!r.ok) throw new Error(); return r.json(); }))).then(([data, categories]) => {
       if (!Array.isArray(data.assets) || !Array.isArray(categories.excluded_ids)) throw new Error();
+      snapshot = data;
+      updateSelection();
       document.getElementById('status').textContent = data.assets.length.toLocaleString() + ' assets · Snapshot: ' + new Date(data.snapshot_at).toUTCString();
       render(data.assets, new Set(categories.excluded_ids));
     }).catch(() => {
