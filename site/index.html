@@ -18,7 +18,11 @@
     .header-note { color: var(--muted); } .header-note span { color: var(--accent); margin: 0 .4rem; }
     .hero { padding: 1.75rem 0; border-bottom: 1px solid var(--line); background-image: linear-gradient(90deg, transparent 99.8%, #e5e7eb 100%); background-size: 12.5% 100%; }
     .eyebrow { color: var(--accent); font-weight: 650; margin: 0 0 .55rem; }
-    .status-dot { display: inline-block; width: 7px; height: 7px; background: var(--accent); border-radius: 50%; margin-right: .45rem; }
+    .freshness { display: inline-flex; align-items: center; gap: .4rem; font-weight: 700; padding: .15rem .4rem; border: 1px solid currentColor; border-radius: 3px; margin-right: .5rem; color: var(--muted); }
+    .freshness::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .freshness[data-state="fresh"] { color: #176c39; background: #edf8ef; }
+    .freshness[data-state="overdue"] { color: #835300; background: #fff7df; }
+    .freshness[data-state="stale"] { color: #b51f25; background: #fff0f0; }
     h1 { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.05; letter-spacing: -.055em; margin: 0; }
     h1 span { color: var(--accent); } h2 { font-size: clamp(1.65rem, 3vw, 2.2rem); letter-spacing: -.045em; line-height: 1.15; margin: 0; }
     .hero-copy { color: var(--muted); max-width: 40rem; margin: .55rem 0; }
@@ -54,10 +58,10 @@
   <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true">f</span> fetchr<span class="brand-dot">.</span></a><span class="header-note">OPEN MARKET DATA <span aria-hidden="true">/</span> USD</span></header>
   <main>
   <section class="hero">
-    <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> CRYPTO MARKET DATA <span class="slash">/</span> COINGECKO</p>
+    <p class="eyebrow">CRYPTO MARKET DATA <span class="slash">/</span> COINGECKO</p>
     <h1>Market data, <span>ready to use.</span></h1>
     <p class="hero-copy">A simple snapshot of the crypto market. Grab the data, plug it into your tools, and get building.</p>
-    <p id="status" class="snapshot-status" aria-live="polite">Checking snapshot freshness…</p>
+    <p id="status" class="snapshot-status" aria-live="polite"><span id="freshness" class="freshness" data-state="unknown">Checking</span><span id="snapshot-detail">Checking snapshot freshness…</span></p>
     <div class="links"><a class="button primary" href="assets.csv" download><span aria-hidden="true">↓</span> Download CSV</a><a class="button secondary" href="assets.json" download><span aria-hidden="true">{ }</span> Download JSON</a></div>
   </section>
   <section class="market-section" aria-labelledby="market-heading">
@@ -119,6 +123,27 @@
     const customFormula = document.getElementById('custom-formula');
     const exportStatus = document.getElementById('export-status');
     let snapshot = null;
+    function updateFreshness() {
+      if (!snapshot) return;
+      const badge = document.getElementById('freshness');
+      const detail = document.getElementById('snapshot-detail');
+      if (!badge || !detail) return;
+      const timestamp = new Date(snapshot.snapshot_at);
+      const elapsed = Date.now() - timestamp.getTime();
+      if (!Number.isFinite(elapsed) || elapsed < -300000) {
+        badge.dataset.state = 'unknown'; badge.textContent = 'Unknown freshness';
+        detail.textContent = snapshot.assets.length.toLocaleString() + ' assets · Snapshot time unavailable or ahead of your clock.';
+        return;
+      }
+      const minutes = Math.floor(Math.max(0, elapsed) / 60000);
+      const age = minutes < 60 ? minutes + 'm' : Math.floor(minutes / 60) + 'h ' + minutes % 60 + 'm';
+      const state = elapsed <= 90 * 60000 ? 'fresh' : elapsed <= 180 * 60000 ? 'overdue' : 'stale';
+      badge.dataset.state = state;
+      badge.textContent = {fresh: 'Fresh', overdue: 'Update overdue', stale: 'Stale data'}[state];
+      badge.title = 'Fresh: up to 90 minutes; overdue: up to 3 hours; stale: over 3 hours. Based on your device clock.';
+      detail.textContent = snapshot.assets.length.toLocaleString() + ' assets · Updated ' + age + ' ago · ' + timestamp.toUTCString();
+    }
+    setInterval(updateFreshness, 60000);
     for (const [field, description] of fields) {
       const label = document.createElement('label');
       const input = document.createElement('input');
@@ -230,7 +255,7 @@
       if (!Array.isArray(data.assets) || !Array.isArray(categories.excluded_ids)) throw new Error();
       snapshot = data;
       updateSelection();
-      document.getElementById('status').textContent = data.assets.length.toLocaleString() + ' assets · Snapshot: ' + new Date(data.snapshot_at).toUTCString();
+      updateFreshness();
       render(data.assets, new Set(categories.excluded_ids));
     }).catch(() => {
       document.getElementById('status').textContent = 'Snapshot unavailable. Please try again later.';

@@ -13,6 +13,8 @@ The homepage previews the first 15 assets by market cap after excluding IDs in C
 
 The field selector on the page produces custom CSV and JSON downloads and a Google Sheets formula for the selected columns. Custom downloads are snapshots created in the browser; they do not update automatically. The formula imports the full CSV and selects the chosen columns when Google Sheets refreshes it. Copy buttons are available for the formulas and full-file URLs.
 
+The homepage shows snapshot freshness using color and text: green **Fresh** for up to 90 minutes, amber **Update overdue** for 90 minutes to 3 hours, and red **Stale data** beyond 3 hours. It displays the age and UTC timestamp and recalculates the age every minute using the visitor's device clock. This describes the loaded snapshot, not the status of the scheduler or the update time of every individual asset. Reload the page to retrieve the latest published snapshot.
+
 To import the complete dataset into Google Sheets, enter:
 
 ```text
