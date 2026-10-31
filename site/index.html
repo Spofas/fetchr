@@ -10,7 +10,7 @@
     .links { display: flex; gap: 1rem; flex-wrap: wrap; } .button { background: #2349a2; color: white; padding: .6rem 1rem; border-radius: .4rem; text-decoration: none; }
     code { overflow-wrap: anywhere; background: #f0f2f7; padding: .15rem .3rem; }
     table { border-collapse: collapse; width: 100%; } th, td { text-align: left; padding: .45rem; border-bottom: 1px solid #ddd; }
-    .market-table { font-variant-numeric: tabular-nums; }
+    .market-table { font-size: .85rem; font-variant-numeric: tabular-nums; }
     .market-table th:not(:nth-child(2)), .market-table td:not(:nth-child(2)) { text-align: right; }
     .asset-name { display: flex; gap: .5rem; align-items: center; } .asset-icon { width: 24px; height: 24px; border-radius: 50%; }
     @media (max-width: 680px) { .market-table thead { display: none; } .market-table tr { display: block; border-bottom: 1px solid #ddd; padding: .5rem 0; } .market-table td, .market-table td:not(:nth-child(2)) { display: flex; justify-content: space-between; text-align: right; border: 0; padding: .15rem .45rem; } .market-table td::before { content: attr(data-label); font-weight: 600; } }
@@ -23,8 +23,8 @@
   <p class="links"><a class="button" href="assets.csv" download>Download CSV</a><a href="assets.json">View JSON</a></p>
   <h2>Latest market data</h2>
   <p>The top 25 assets by market cap, excluding stablecoins and liquid-staking tokens, from the latest snapshot. Prices and valuations are in USD. Exclusions use CoinGecko categories, which may be incomplete.</p>
-    <table class="market-table"><thead><tr><th scope="col">Rank</th><th scope="col">Asset</th><th scope="col">Price</th><th scope="col">Market cap</th><th scope="col">FDV</th><th scope="col">24h change</th></tr></thead>
-      <tbody id="market-data"><tr><td colspan="6">Loading market data…</td></tr></tbody>
+    <table class="market-table"><thead><tr><th scope="col">Rank</th><th scope="col">Asset</th><th scope="col">Price</th><th scope="col">FDV</th><th scope="col">24h change</th></tr></thead>
+      <tbody id="market-data"><tr><td colspan="5">Loading market data…</td></tr></tbody>
     </table>
   <h2>What’s included</h2>
   <p>The snapshot targets the leading assets by market capitalization. Its actual asset count and refresh time appear above. It is refreshed on a schedule when the workflow runs successfully; scheduled runs may be delayed. Rankings can change between source requests, so the ranking is approximate.</p>
@@ -51,7 +51,7 @@
       if (!selected.length) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = 6;
+        cell.colSpan = 5;
         cell.textContent = 'No matching assets in this snapshot.';
         row.appendChild(cell);
         table.appendChild(row);
@@ -61,8 +61,8 @@
         const change = typeof asset.price_change_percentage_24h === 'number' && Number.isFinite(asset.price_change_percentage_24h)
           ? asset.price_change_percentage_24h.toFixed(2) + '%' : '—';
         const cells = [asset.market_cap_rank ?? '—', (asset.name || 'Unknown') + ' (' + (asset.symbol || '—').toUpperCase() + ')',
-          money(asset.current_price), money(asset.market_cap), money(asset.fully_diluted_valuation), change];
-        const labels = ['Rank', 'Asset', 'Price', 'Market cap', 'FDV', '24h change'];
+          money(asset.current_price), money(asset.fully_diluted_valuation), change];
+        const labels = ['Rank', 'Asset', 'Price', 'FDV', '24h change'];
         for (const [index, value] of cells.entries()) {
           const cell = document.createElement('td');
           cell.dataset.label = labels[index];
@@ -100,7 +100,7 @@
       table.replaceChildren();
       const row = document.createElement('tr');
       const cell = document.createElement('td');
-      cell.colSpan = 6;
+      cell.colSpan = 5;
       cell.textContent = 'Market data could not be loaded.';
       row.appendChild(cell);
       table.appendChild(row);
