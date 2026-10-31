@@ -1,6 +1,6 @@
 # fetchr
 
-Fetchr publishes a USD cryptocurrency market snapshot sourced from CoinGecko. The default target is **2,500 assets**, updated by GitHub Actions at minute 55 of each hour in UTC. GitHub may delay scheduled jobs. The last successful deployment stays available if a refresh fails. The site is static: it has no continuously running server or server-side query API.
+Fetchr publishes a USD cryptocurrency market snapshot sourced from CoinGecko. The default target is **2,500 assets**, updated by GitHub Actions at minute 09 of each hour in UTC. GitHub may delay scheduled jobs. The last successful deployment stays available if a refresh fails. The site is static: it has no continuously running server or server-side query API.
 
 - [Open fetchr](https://spofas.github.io/fetchr/)
 - [Download the full CSV](https://spofas.github.io/fetchr/assets.csv)
@@ -48,7 +48,7 @@ The full JSON contains `source`, `currency`, `snapshot_at` (when fetchr complete
 
 ## Configuration and deployment
 
-The workflow in [`.github/workflows/pages.yml`](.github/workflows/pages.yml) runs on pushes to `main`, manual dispatch, and `55 * * * *` (minute 55 of each hour UTC). Scheduled GitHub Actions are not guaranteed to start exactly on time. The repository variable `FETCHR_ASSET_COUNT` overrides the default of `2500`; configure it under **Settings → Secrets and variables → Actions → Variables**. Changing the variable takes effect on the next run. Edit the cron expression on the default branch to change the schedule.
+The workflow in [`.github/workflows/pages.yml`](.github/workflows/pages.yml) runs on pushes to `main`, manual dispatch, and `9 * * * *` (minute 09 of each hour UTC). Scheduled GitHub Actions are not guaranteed to start exactly on time. The repository variable `FETCHR_ASSET_COUNT` overrides the default of `2500`; configure it under **Settings → Secrets and variables → Actions → Variables**. Changing the variable takes effect on the next run. Edit the cron expression on the default branch to change the schedule.
 
 To set up a deployment:
 

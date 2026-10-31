@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '55 * * * *'
+    - cron: '9 * * * *'
   workflow_dispatch:
 permissions:
   contents: read
