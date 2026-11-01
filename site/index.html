@@ -5,40 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>fetchr — crypto market data</title>
   <style>
-    :root { color-scheme: light; --bg: #fff; --panel: #f3f4f6; --line: #d2d6db; --text: #15171a; --muted: #535a63; --accent: #c92929; }
+    :root { color-scheme: dark; --bg: #0b0c0f; --panel: #13151a; --line: #2a2d34; --text: #f2f3f5; --muted: #a0a6b0; --accent: #ff414b; }
     * { box-sizing: border-box; }
-    body { font: 15px/1.6 system-ui, sans-serif; max-width: 72rem; margin: auto; padding: 0 2rem; background: var(--bg); color: var(--text); }
+    body { font: 15px/1.6 system-ui, sans-serif; max-width: 80rem; margin: auto; padding: 0 2rem; background: var(--bg); color: var(--text); }
     a { color: var(--accent); } a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
     .site-header, footer { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-    .site-header { min-height: 58px; border-bottom: 2px solid var(--text); }
+    .site-header { min-height: 58px; border-bottom: 1px solid var(--line); }
     .brand { color: var(--text); text-decoration: none; font-size: 1.3rem; font-weight: 750; letter-spacing: -.06em; }
-    .brand-mark { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-right: .35rem; border-radius: 2px; background: var(--accent); color: #fff; letter-spacing: 0; }
+    .brand-mark { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-right: .35rem; border-radius: 0; background: var(--accent); color: #fff; letter-spacing: 0; }
     .brand-dot, .slash { color: var(--accent); }
     .header-note, .eyebrow, .section-badge, .snapshot-status { font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .08em; }
     .header-note { color: var(--muted); } .header-note span { color: var(--accent); margin: 0 .4rem; }
-    .hero { padding: 1.75rem 0; border-bottom: 1px solid var(--line); background-image: linear-gradient(90deg, transparent 99.8%, #e5e7eb 100%); background-size: 12.5% 100%; }
+    .hero { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 1.5rem 2rem; align-items: center; padding: 2rem 0 0; border-bottom: 1px solid var(--line); background-image: linear-gradient(90deg, transparent calc(100% - 1px), #ffffff03 0); background-size: 8.333% 100%; }
+    .hero::before { content: ""; position: absolute; top: 2rem; left: -1rem; width: 3px; height: 2rem; background: var(--accent); }
+    .hero-intro { min-width: 0; }
     .eyebrow { color: var(--accent); font-weight: 650; margin: 0 0 .55rem; }
-    .freshness { display: inline-flex; align-items: center; gap: .4rem; font-weight: 700; padding: .15rem .4rem; border: 1px solid currentColor; border-radius: 3px; margin-right: .5rem; color: var(--muted); }
+    .freshness { display: inline-flex; align-items: center; gap: .4rem; font-weight: 700; padding: .15rem .4rem; border: 1px solid currentColor; border-radius: 0; margin-right: .5rem; color: var(--muted); }
     .freshness::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-    .freshness[data-state="fresh"] { color: #176c39; background: #edf8ef; }
-    .freshness[data-state="overdue"] { color: #835300; background: #fff7df; }
-    .freshness[data-state="stale"] { color: #b51f25; background: #fff0f0; }
-    h1 { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.05; letter-spacing: -.055em; margin: 0; }
-    h1 span { color: var(--accent); } h2 { font-size: clamp(1.65rem, 3vw, 2.2rem); letter-spacing: -.045em; line-height: 1.15; margin: 0; }
+    .freshness[data-state="fresh"] { color: var(--text); background: #ffffff08; }
+    .freshness[data-state="overdue"] { color: var(--accent); background: #ff414b0a; }
+    .freshness[data-state="stale"] { color: var(--accent); background: #ff414b15; }
+    h1 { font-size: clamp(1.8rem, 3.5vw, 2.6rem); line-height: 1.05; letter-spacing: -.055em; margin: 0; }
+    h1 span { color: var(--accent); } h2 { font-size: clamp(1.25rem, 2.5vw, 1.6rem); letter-spacing: -.045em; line-height: 1.15; margin: 0; }
     .hero-copy { color: var(--muted); max-width: 40rem; margin: .55rem 0; }
-    .snapshot-status { color: var(--muted); margin: 0 0 .85rem; letter-spacing: .01em; }
+    .snapshot-status { grid-column: 1 / -1; display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; color: var(--muted); margin: 0; padding: .75rem 0; border-top: 1px solid var(--line); letter-spacing: .01em; }
     .links { display: flex; gap: .7rem; flex-wrap: wrap; }
-    .button { display: inline-flex; align-items: center; gap: .6rem; padding: .55rem .9rem; border: 1px solid var(--line); border-radius: 5px; font-size: .86rem; font-weight: 700; text-decoration: none; transition: border-color .15s, background .15s; }
-    .button.primary { background: var(--accent); color: #fff; border-color: var(--accent); } .button.primary:hover { background: #9f1f1f; }
+    .button { display: inline-flex; align-items: center; gap: .6rem; padding: .55rem .9rem; border: 1px solid var(--line); border-radius: 0; font-size: .86rem; font-weight: 700; text-decoration: none; transition: border-color .15s, background .15s; }
+    .button.primary { background: var(--accent); color: #fff; border-color: var(--accent); } .button.primary:hover { background: #dc2834; }
     .button.secondary { color: var(--text); background: var(--panel); } .button.secondary:hover { border-color: var(--accent); }
-    .market-section, .documentation, .spreadsheet { padding: 2rem 0; border-bottom: 1px solid var(--line); }
+    .market-section, .documentation, .spreadsheet { padding: 1.5rem 0; border-bottom: 1px solid var(--line); }
     .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; } .section-heading .eyebrow { margin-bottom: .7rem; }
-    .section-badge { color: var(--text); white-space: nowrap; padding: .4rem .55rem; border: 1px solid var(--text); border-radius: 0; }
+    .section-badge { color: var(--text); white-space: nowrap; padding: .4rem .55rem; border: 1px solid var(--line); border-radius: 0; }
     .muted { color: var(--muted); max-width: 53rem; } .footnote { font-size: .85rem; }
     code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; color: var(--text); }
     .code-block { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent); padding: 1rem 1.2rem; font-size: .85rem; }
     .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: .45rem; padding: 0; border: 0; margin: 1rem 0; }
-    .field-grid label { display: flex; align-items: flex-start; gap: .55rem; padding: .5rem; background: var(--panel); font-size: .85rem; cursor: pointer; }
+    .field-grid label:has(input:checked) { border-color: #ff414b55; }
+    .field-grid label { border: 1px solid var(--line); display: flex; align-items: flex-start; gap: .55rem; padding: .5rem; background: var(--panel); font-size: .85rem; cursor: pointer; }
     .field-grid input { accent-color: var(--accent); margin-top: .35rem; }
     .field-grid code { display: block; font-size: .72rem; color: var(--muted); }
     button.button { cursor: pointer; font-family: inherit; } button:disabled { opacity: .5; cursor: not-allowed; }
@@ -46,23 +49,28 @@
     .copy-row code { flex: 1 1 20rem; } .message { font-size: .85rem; color: var(--muted); min-height: 1.4em; }
     table { border-collapse: collapse; width: 100%; } th, td { text-align: left; padding: .45rem .65rem; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
     th { color: var(--muted); font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; text-transform: uppercase; letter-spacing: .05em; }
+    .market-table td:not(:nth-child(2)) { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .market-table thead { background: var(--panel); }
+    .market-table td:first-child { color: var(--muted); }
+    .market-table td[data-direction="negative"] { color: var(--accent); }
+    .market-table td[data-direction="positive"] { color: var(--text); }
     .market-table { font-size: .85rem; font-variant-numeric: tabular-nums; margin-top: .75rem; }
-    .market-table tbody tr:hover { background: #f3f4f6; }
+    .market-table tbody tr:hover { background: #ffffff04; }
     .market-table th:not(:nth-child(2)), .market-table td:not(:nth-child(2)) { text-align: right; }
     .asset-name { display: flex; gap: .5rem; align-items: center; } .asset-icon { width: 24px; height: 24px; border-radius: 50%; }
     footer { padding: 2rem 0 3rem; color: var(--muted); font-size: .8rem; } footer p { margin: 0; } .footer-brand { font-size: 1.1rem; }
-    @media (max-width: 680px) { body { padding: 0 1.1rem; } .header-note { font-size: 9px; } .hero { padding: 1.5rem 0; } .market-section, .documentation, .spreadsheet { padding: 1.5rem 0; } .section-badge { font-size: 9px; } .market-table thead { display: none; } .market-table tr { display: grid; grid-template-columns: 1fr 1fr; gap: .1rem .75rem; border-bottom: 1px solid var(--line); padding: .6rem 0; } .market-table td, .market-table td:not(:nth-child(2)) { display: flex; justify-content: space-between; align-items: center; gap: .5rem; text-align: right; border: 0; padding: .1rem .2rem; } .market-table td:nth-child(2) { grid-column: 1 / -1; grid-row: 1; } .market-table td::before { content: attr(data-label); color: var(--muted); font-weight: 500; } }
+    @media (max-width: 680px) { body { padding: 0 1.1rem; } .header-note { font-size: 9px; } .hero { grid-template-columns: 1fr; gap: 1rem; padding: 1.5rem 0 0; } .hero::before { top: 1.5rem; left: -.6rem; } .hero .links { padding-bottom: .25rem; } .snapshot-status { gap: .4rem; } .section-heading { align-items: center; } footer { flex-wrap: wrap; } .market-section, .documentation, .spreadsheet { padding: 1.5rem 0; } .section-badge { font-size: 9px; } .market-table thead { display: none; } .market-table tr { display: grid; grid-template-columns: 1fr 1fr; gap: .1rem .75rem; border-bottom: 1px solid var(--line); padding: .6rem 0; } .market-table td, .market-table td:not(:nth-child(2)) { display: flex; justify-content: space-between; align-items: center; gap: .5rem; text-align: right; border: 0; padding: .1rem .2rem; } .market-table td:nth-child(2) { grid-column: 1 / -1; grid-row: 1; } .market-table td::before { content: attr(data-label); color: var(--muted); font-weight: 500; } }
   </style>
 </head>
 <body>
   <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true">f</span> fetchr<span class="brand-dot">.</span></a><span class="header-note">OPEN MARKET DATA <span aria-hidden="true">/</span> USD</span></header>
   <main>
   <section class="hero">
-    <p class="eyebrow">CRYPTO MARKET DATA <span class="slash">/</span> COINGECKO</p>
-    <h1>Market data, <span>ready to use.</span></h1>
-    <p class="hero-copy">A simple snapshot of the crypto market. Grab the data, plug it into your tools, and get building.</p>
-    <p id="status" class="snapshot-status" aria-live="polite"><span id="freshness" class="freshness" data-state="unknown">Checking</span><span id="snapshot-detail">Checking snapshot freshness…</span></p>
+    <div class="hero-intro"><p class="eyebrow">MARKET DATA / COINGECKO</p>
+    <h1>Crypto market <span>snapshot.</span></h1>
+    <p class="hero-copy">USD market data. Hourly snapshots. Ready for analysis.</p></div>
     <div class="links"><a class="button primary" href="assets.csv" download><span aria-hidden="true">↓</span> Download CSV</a><a class="button secondary" href="assets.json" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">{ }</span> View JSON</a></div>
+    <p id="status" class="snapshot-status" aria-live="polite"><span id="freshness" class="freshness" data-state="unknown">Checking</span><span id="snapshot-detail">Checking snapshot freshness…</span></p>
   </section>
   <section class="market-section" aria-labelledby="market-heading">
   <div class="section-heading"><div><p class="eyebrow">01 <span class="slash">/</span> MARKET OVERVIEW</p><h2 id="market-heading">Latest market data</h2></div><span class="section-badge">TOP 15 · USD</span></div>
@@ -86,7 +94,7 @@
   <p class="muted footnote">Missing values are blank in CSV and null in JSON. JSON includes the snapshot completion time. Data is not investment advice.</p>
   </section>
   <section class="spreadsheet" aria-labelledby="sheet-heading"><p class="eyebrow">03 <span class="slash">/</span> CONNECT YOUR TOOLS</p>
-  <h2 id="sheet-heading">Bring it to your spreadsheet.</h2>
+  <h2 id="sheet-heading">Spreadsheet connections</h2>
   <p class="muted">In Google Sheets, paste this formula into a cell:</p>
   <div class="code-block copy-row"><code id="sheet-formula">=IMPORTDATA("URL_TO_ASSETS_CSV")</code><button class="button secondary" type="button" data-copy="sheet-formula">Copy formula</button></div>
   <p class="muted">In Excel, choose <strong>Data → From Web</strong> and enter the CSV URL. Spreadsheet refresh timing is independent of fetchr.</p>
@@ -95,7 +103,7 @@
   <p id="copy-status" class="message" role="status"></p>
   </section>
   <section class="spreadsheet" aria-labelledby="custom-heading"><p class="eyebrow">04 <span class="slash">/</span> CUSTOM EXPORT</p>
-  <h2 id="custom-heading">Choose your fields.</h2>
+  <h2 id="custom-heading">Custom export</h2>
   <p class="muted">Select the columns you need. Custom downloads are one-time files; the Sheets formula imports fresh data when Google Sheets refreshes it.</p>
   <div class="links"><button class="button secondary" type="button" id="select-all">Select all</button><button class="button secondary" type="button" id="select-none">Clear all</button></div>
   <fieldset class="field-grid" id="field-selector"><legend class="muted">Fields to include</legend></fieldset>
@@ -219,13 +227,14 @@
       for (const asset of selected) {
         const row = document.createElement('tr');
         const change = typeof asset.price_change_percentage_24h === 'number' && Number.isFinite(asset.price_change_percentage_24h)
-          ? asset.price_change_percentage_24h.toFixed(2) + '%' : '—';
+          ? (asset.price_change_percentage_24h > 0 ? '+' : '') + asset.price_change_percentage_24h.toFixed(2) + '%' : '—';
         const cells = [asset.market_cap_rank ?? '—', (asset.name || 'Unknown') + ' (' + (asset.symbol || '—').toUpperCase() + ')',
           money(asset.current_price), money(asset.fully_diluted_valuation), change];
         const labels = ['Rank', 'Asset', 'Price', 'FDV', '24h change'];
         for (const [index, value] of cells.entries()) {
           const cell = document.createElement('td');
           cell.dataset.label = labels[index];
+          if (index === 4 && typeof asset.price_change_percentage_24h === 'number') cell.dataset.direction = asset.price_change_percentage_24h < 0 ? 'negative' : 'positive';
           if (index === 1) {
             const container = document.createElement('span');
             container.className = 'asset-name';
