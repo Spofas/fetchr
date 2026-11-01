@@ -171,10 +171,10 @@
       }
       const minutes = Math.floor(Math.max(0, elapsed) / 60000);
       const age = minutes < 60 ? minutes + 'm' : Math.floor(minutes / 60) + 'h ' + minutes % 60 + 'm';
-      const state = elapsed <= 90 * 60000 ? 'fresh' : elapsed <= 180 * 60000 ? 'overdue' : 'stale';
+      const state = minutes <= 50 ? 'fresh' : minutes <= 70 ? 'overdue' : 'stale';
       badge.dataset.state = state;
-      badge.textContent = {fresh: 'Fresh', overdue: 'Update overdue', stale: 'Stale data'}[state];
-      badge.title = 'Fresh: up to 90 minutes; overdue: up to 3 hours; stale: over 3 hours. Based on your device clock.';
+      badge.textContent = {fresh: 'Fresh', overdue: 'Update soon', stale: 'Stale data'}[state];
+      badge.title = 'Fresh: 0–50 minutes; update soon: 51–70 minutes; stale: 71 minutes onward. Based on your device clock.';
       detail.textContent = snapshot.assets.length.toLocaleString() + ' assets · Updated ' + age + ' ago · ' + timestamp.toUTCString();
     }
     setInterval(updateFreshness, 60000);
