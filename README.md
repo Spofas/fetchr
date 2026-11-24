@@ -59,6 +59,8 @@ To set up a deployment:
 3. Under **Settings → Pages**, select **GitHub Actions** as the source.
 4. Run **Refresh and deploy market data** from the Actions tab, or wait for a scheduled run. The workflow generates a complete snapshot before deploying. A failed run leaves the last successful Pages deployment in place.
 
+The workflow uses Node 24-compatible action releases and explicitly uploads/deploys the `github-pages` artifact. If the deployment step fails (for example, the artifact is not yet discoverable), it waits 10 seconds and retries deployment once using the same artifact. This does not fetch CoinGecko again. If the retry also fails, the workflow is marked failed so the problem remains visible.
+
 At 250 assets per request, a 2,500-asset refresh needs at least 10 market requests. Additional calls may be needed for overlapping pages, retries, manual runs, and category data. Category IDs are cached by UTC day in GitHub Actions; cache misses can cause extra category requests. GitHub Actions and CoinGecko limits and redistribution terms should be checked for the account in use. The CoinGecko free-tier monthly quota has not been verified.
 
 ## Local development
